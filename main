@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한글 폰트 변환기</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gamja+Flower&family=Nanum+Gothic&family=Song+Myung&display=swap');
+
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 20px;
+        }
+
+        h1 { color: #333; margin-bottom: 30px; }
+
+        .input-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus { border-color: var(--primary-color); }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .font-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .font-name {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .preview-text {
+            font-size: 1.5rem;
+            word-break: break-all;
+            min-height: 50px;
+        }
+
+        /* 개별 폰트 적용 */
+        .font-black-han { font-family: 'Black Han Sans', sans-serif; }
+        .font-do-hyeon { font-family: 'Do Hyeon', sans-serif; }
+        .font-gamja { font-family: 'Gamja Flower', sans-serif; }
+        .font-song-myung { font-family: 'Song Myung', serif; }
+        .font-nanum { font-family: 'Nanum Gothic', sans-serif; }
+    </style>
+</head>
+<body>
+
+    <h1>✨ 한글 폰트 변환기</h1>
+
+    <div class="input-container">
+        <input type="text" id="userInput" placeholder="변환할 문구를 입력하세요..." value="여기에 글자를 입력해 보세요!">
+    </div>
+
+    <div class="result-grid" id="resultGrid">
+        <div class="font-card">
+            <div class="font-name">블랙 한 산스 (Black Han Sans)</div>
+            <div class="preview-text font-black-han">여기에 글자를 입력해 보세요!</div>
+        </div>
+        <div class="font-card">
+            <div class="font-name">도현체 (Do Hyeon)</div>
+            <div class="preview-text font-do-hyeon">여기에 글자를 입력해 보세요!</div>
+        </div>
+        <div class="font-card">
+            <div class="font-name">감자꽃체 (Gamja Flower)</div>
+            <div class="preview-text font-gamja">여기에 글자를 입력해 보세요!</div>
+        </div>
+        <div class="font-card">
+            <div class="font-name">송명체 (Song Myung)</div>
+            <div class="preview-text font-song-myung">여기에 글자를 입력해 보세요!</div>
+        </div>
+        <div class="font-card">
+            <div class="font-name">나눔고딕 (Nanum Gothic)</div>
+            <div class="preview-text font-nanum">여기에 글자를 입력해 보세요!</div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('userInput');
+        const previews = document.querySelectorAll('.preview-text');
+
+        // 입력창에 타이핑할 때마다 모든 미리보기 텍스트 변경
+        input.addEventListener('input', (e) => {
+            const val = e.target.value;
+            previews.forEach(p => {
+                p.textContent = val || "글자를 입력해주세요";
+            });
+        });
+    </script>
+</body>
+</html>
