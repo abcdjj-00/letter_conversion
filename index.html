@@ -2,124 +2,480 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>한글 폰트 변환기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>웹 게임 - 파이브와 돌</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gamja+Flower&family=Nanum+Gothic&family=Song+Myung&display=swap');
+        * { touch-action: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
+        body { overflow: hidden; background-color: #ffffff; font-family: 'Pretendard', sans-serif; width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+        canvas { display: block; }
 
-        :root {
-            --primary-color: #4a90e2;
-            --bg-color: #f4f7f6;
+        /* --- 오프닝 팝업 스타일 --- */
+        #opening-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(3px);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-
-        body {
-            font-family: 'Nanum Gothic', sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 50px 20px;
+        #opening-box {
+            width: 90%; max-width: 400px; background: white; border-radius: 20px;
+            padding: 30px; position: relative; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
         }
-
-        h1 { color: #333; margin-bottom: 30px; }
-
-        .input-container {
-            width: 100%;
-            max-width: 600px;
-            margin-bottom: 40px;
+        .opening-slide { display: none; min-height: 280px; flex-direction: column; }
+        .opening-slide.active { display: flex; animation: fadeIn 0.3s; }
+        .opening-img-placeholder {
+            width: 100%; height: 150px; background-color: #eee; border-radius: 10px;
+            margin-bottom: 20px; display: flex; justify-content: center; align-items: center; color: #999;
         }
+        .opening-title { font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #222; }
+        .opening-desc { font-size: 14px; color: #555; line-height: 1.6; text-align: left; }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2rem;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            outline: none;
-            transition: border-color 0.3s;
+        .opening-footer { display: flex; gap: 10px; margin-top: 20px; }
+        .op-btn { flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; border: none; font-size: 14px; }
+        #close-opening { background: #eee; color: #333; }
+        #never-show-opening { background: #444; color: white; }
+
+        .nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: #333; color: white; border: none; width: 35px; height: 35px; border-radius: 50%;
+            font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            opacity: 0.8;
         }
+        #next-btn { right: -15px; }
+        #prev-btn { left: -15px; }
 
-        input[type="text"]:focus { border-color: var(--primary-color); }
-
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 1000px;
+        /* --- 게임 UI 스타일 --- */
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        #game-title { font-size: 32px; font-weight: 900; margin-bottom: 30px; color: #333; }
+        .mode-container { display: flex; flex-direction: row; gap: 20px; align-items: stretch; padding: 15px; }
+        .mode-card { width: 280px; background-color: rgba(245, 245, 245, 0.9); border-radius: 20px; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative; border: 1px solid rgba(0,0,0,0.05); cursor: pointer; }
+        .mode-card h2 { margin-bottom: 15px; font-size: 20px; color: #222; text-align: center; }
+        .mode-desc { font-size: 14px; color: #555; line-height: 1.5; text-align: center; margin-bottom: 20px; opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: none; word-break: keep-all; min-height: 60px; display: flex; align-items: center; }
+        .start-btn { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 12px; background-color: #444; opacity: 0; transform: translateY(10px); transition: 0.3s; }
+        
+        @media (hover: hover) { 
+            .mode-card:hover { transform: translateY(-5px); background-color: #fff; } 
+            .mode-card:hover .mode-desc, .mode-card:hover .start-btn { opacity: 1; transform: translateY(0); pointer-events: auto; } 
         }
+        .mode-card.active { transform: scale(1.02); background-color: #fff; border: 1px solid #444; }
+        .mode-card.active .mode-desc, .mode-card.active .start-btn { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-        .font-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        #result-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; color: white; background-color: rgba(30, 30, 35, 0.7); backdrop-filter: blur(5px); }
+        #result-msg { font-size: 24px; font-weight: 800; margin-bottom: 15px; text-align: center; line-height: 1.5; padding: 0 20px; word-break: keep-all; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        #final-stats { font-size: 18px; margin-bottom: 30px; color: rgba(255, 255, 255, 0.9); text-align: center; line-height: 1.6; }
+        .btn-group { display: flex; gap: 15px; }
+        .result-btn { padding: 15px 30px; font-size: 16px; font-weight: bold; border-radius: 50px; border: none; cursor: pointer; transition: 0.2s; min-width: 130px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn-main { background-color: white; color: #333; order: 1; }
+        .btn-sub { background-color: rgba(255,255,255,0.25); color: white; border: 1.5px solid white; order: 2; }
+
+        #ui-container { position: fixed; top: 15px; left: 15px; display: none; flex-direction: column; gap: 8px; pointer-events: none; z-index: 50; }
+        
+        /* --- 제어 버튼 위치 로직 --- */
+        #pause-btn { 
+            position: fixed; top: 20px; right: 20px; width: 30px; height: 30px; 
+            background: none; border: none; display: none; justify-content: center; 
+            align-items: center; cursor: pointer; z-index: 150; 
         }
+        #pause-btn::before, #pause-btn::after { content: ''; width: 4px; height: 18px; background-color: #333; border-radius: 2px; position: absolute; }
+        #pause-btn::before { left: 8px; } #pause-btn::after { right: 8px; }
 
-        .font-name {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
+        #sound-btn { 
+            position: fixed; top: 20px; width: 30px; height: 30px; 
+            background: none; border: none; display: flex; justify-content: center; 
+            align-items: center; cursor: pointer; z-index: 150; transition: right 0.3s ease;
         }
+        /* 시작 페이지에서의 위치 (멈춤버튼 자리) */
+        .sound-at-start { right: 20px; }
+        /* 게임 중 위치 (멈춤버튼 옆) */
+        .sound-at-game { right: 65px; }
 
-        .preview-text {
-            font-size: 1.5rem;
-            word-break: break-all;
-            min-height: 50px;
-        }
+        #sound-icon { width: 24px; height: 24px; fill: #333; transition: 0.2s; }
 
-        /* 개별 폰트 적용 */
-        .font-black-han { font-family: 'Black Han Sans', sans-serif; }
-        .font-do-hyeon { font-family: 'Do Hyeon', sans-serif; }
-        .font-gamja { font-family: 'Gamja Flower', sans-serif; }
-        .font-song-myung { font-family: 'Song Myung', serif; }
-        .font-nanum { font-family: 'Nanum Gothic', sans-serif; }
+        .label-text { color: #333; font-size: 15px; font-weight: bold; }
+        #heart-list { display: flex; gap: 5px; }
+        .heart-unit { position: relative; width: 28px; height: 28px; background-color: #eee; border-radius: 4px; overflow: hidden;}
+        .heart-mask { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; transition: height 0.3s; }
+        .heart-img { width: 28px; height: 28px; object-fit: contain; }
+        .stats-row { font-size: 18px; font-weight: bold; color: #333; margin-top: 2px; }
+        
+        #control-guide { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.05); color: #666; padding: 10px 20px; border-radius: 25px; font-size: 13px; z-index: 150; pointer-events: none; white-space: nowrap; font-weight: bold; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 700px) { .mode-container { flex-direction: column; gap: 15px; } .mode-card { width: 85vw; padding: 25px 20px; } #game-title { font-size: 26px; } }
     </style>
 </head>
 <body>
-
-    <h1>✨ 한글 폰트 변환기</h1>
-
-    <div class="input-container">
-        <input type="text" id="userInput" placeholder="변환할 문구를 입력하세요..." value="여기에 글자를 입력해 보세요!">
-    </div>
-
-    <div class="result-grid" id="resultGrid">
-        <div class="font-card">
-            <div class="font-name">블랙 한 산스 (Black Han Sans)</div>
-            <div class="preview-text font-black-han">여기에 글자를 입력해 보세요!</div>
-        </div>
-        <div class="font-card">
-            <div class="font-name">도현체 (Do Hyeon)</div>
-            <div class="preview-text font-do-hyeon">여기에 글자를 입력해 보세요!</div>
-        </div>
-        <div class="font-card">
-            <div class="font-name">감자꽃체 (Gamja Flower)</div>
-            <div class="preview-text font-gamja">여기에 글자를 입력해 보세요!</div>
-        </div>
-        <div class="font-card">
-            <div class="font-name">송명체 (Song Myung)</div>
-            <div class="preview-text font-song-myung">여기에 글자를 입력해 보세요!</div>
-        </div>
-        <div class="font-card">
-            <div class="font-name">나눔고딕 (Nanum Gothic)</div>
-            <div class="preview-text font-nanum">여기에 글자를 입력해 보세요!</div>
+    <div id="opening-overlay">
+        <div id="opening-box">
+            <div class="opening-slide active">
+                <div class="opening-img-placeholder">IMAGE (MODE 1)</div>
+                <h3 class="opening-title">215초를 버텨라!</h3>
+                <p class="opening-desc"><b>모드 설명:</b>떨어지는 돌을 피해 215초를 살아남으세요.<br>파이브에 닿으면 목숨을 회복합니다! <br><br><b>클리어 조건:</b> 215초 동안 생존하세요! </p>
+            </div>
+            <div class="opening-slide">
+                <div class="opening-img-placeholder">IMAGE (MODE 2)</div>
+                <h3 class="opening-title">215명의 파이브를 잡아라!</h3>
+                <p class="opening-desc"><b>모드 설명:</b> 떨어지는 돌을 피해 파이브 215명을 잡으세요.<br>파이브에 닿으면 목숨을 회복합니다! <br><br><b>클리어 조건:</b> 파이브 215명을 상자 속으로 집어 넣으세요! </p>
+            </div>
+            <div class="opening-slide">
+                <div class="opening-img-placeholder">IMAGE (CONTROL)</div>
+                <h3 class="opening-title">조작 방법</h3>
+                <p class="opening-desc"><b>PC:</b> 방향키 (←, →)<br><b>모바일:</b> 화면 하단 좌/우 터치</p>
+                
+                <div class="opening-footer">
+                    <button id="close-opening" class="op-btn" onclick="closeOpening(false)">닫기</button>
+                    <button id="never-show-opening" class="op-btn" onclick="closeOpening(true)">다시 보지 않기</button>
+                </div>
+            </div>
+            <button id="prev-btn" class="nav-btn" onclick="changeSlide(-1)" style="display:none;">❮</button>
+            <button id="next-btn" class="nav-btn" onclick="changeSlide(1)">❯</button>
         </div>
     </div>
+
+    <div id="start-screen">
+        <div id="game-title">파이브와 돌</div>
+        <div class="mode-container">
+            <div class="mode-card" onclick="handleCardClick(this)">
+                <h2>215초를 버텨라!</h2>
+                <div class="mode-desc">215초 동안 떨어지는 돌을 피해 생존하세요!</div>
+                <button class="start-btn" onclick="startGame('survival', event)">시작하기</button>
+            </div>
+            <div class="mode-card" onclick="handleCardClick(this)">
+                <h2>215명의 파이브를 잡아라!</h2>
+                <div class="mode-desc">돌을 피해 파이브 215명을 상자 속으로 넣으세요!</div>
+                <button class="start-btn" onclick="startGame('catch', event)">시작하기</button>
+            </div>
+        </div>
+        <div id="control-guide">안내 문구 로딩중...</div>
+    </div>
+
+    <button id="sound-btn" class="sound-at-start" onclick="toggleSound()">
+        <svg id="sound-icon" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+    </button>
+    <div id="pause-btn" onclick="pauseGame()"></div>
+
+    <div id="result-screen">
+        <div id="result-msg"></div>
+        <div id="final-stats"></div>
+        <div class="btn-group" id="result-btns"></div>
+    </div>
+
+    <div id="ui-container">
+        <div id="mode-label" class="label-text">목숨</div>
+        <div id="heart-list"></div>
+        <div class="stats-row" id="stats-text">SCORE: 0</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        const input = document.getElementById('userInput');
-        const previews = document.querySelectorAll('.preview-text');
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // 입력창에 타이핑할 때마다 모든 미리보기 텍스트 변경
-        input.addEventListener('input', (e) => {
-            const val = e.target.value;
-            previews.forEach(p => {
-                p.textContent = val || "글자를 입력해주세요";
-            });
+        // --- 오프닝 팝업 로직 (sessionStorage 적용) ---
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.opening-slide');
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('hideOpening') === 'true') {
+                document.getElementById('opening-overlay').style.display = 'none';
+            }
         });
+
+        function changeSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + n + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+            document.getElementById('prev-btn').style.display = (currentSlide === 0) ? 'none' : 'flex';
+            document.getElementById('next-btn').style.display = (currentSlide === slides.length - 1) ? 'none' : 'flex';
+        }
+
+        function closeOpening(neverShowAgain) {
+            if (neverShowAgain) {
+                sessionStorage.setItem('hideOpening', 'true');
+            }
+            document.getElementById('opening-overlay').style.display = 'none';
+        }
+
+        // --- 사운드 및 이미지 설정 ---
+        let isMuted = false;
+        const hitSound = new Audio('25.mp3');
+        const gameOverSound = new Audio('2s.mp3');
+        const winSound = new Audio('15.mp3');
+
+        function playSound(sound) {
+            if (isMuted) return; 
+            sound.currentTime = 0;
+            sound.play().catch(e => {});
+        }
+
+        function toggleSound() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('sound-icon');
+            if (isMuted) {
+                icon.innerHTML = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+                icon.style.fill = "#aaa";
+            } else {
+                icon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+                icon.style.fill = "#333";
+            }
+        }
+
+        function loadImg(src) { const img = new Image(); img.src = src; return img; }
+        const playerImg = loadImg('box.png'); 
+        const itemImages = [loadImg('1.5p.jpg'), loadImg('2.5p.jpg'), loadImg('4.5.png'), loadImg('5.5.png')];
+        const rockImg = loadImg('s.png');
+        const heartImgSrc = '3.5.png'; 
+
+        // --- 게임 변수 ---
+        let lives = 3, heartPieces = 0, score = 0, isGameOver = false, isWin = false, isStarted = false, isPaused = false;
+        let lastTime = 0, objects = [], moveLeft = false, moveRight = false, keys = {};
+        let gameMode = "", survivalTimer = 0, isContinued = false;
+        const targetCatch = 215, survivalDuration = 215, targetSurvivalScore = 55555;
+        let skipInput = "", isInvincible = false, continueInvincibleTimer = 0; 
+
+        document.getElementById('control-guide').innerText = isMobile ? "화면 좌/우 하단을 터치하여 움직이세요" : "키보드 방향키(← →)로 움직이세요";
+
+        let player = { x: 0, y: 0, width: isMobile ? 30 : 60, height: isMobile ? 30 : 60, speed: isMobile ? 7.5 : 16 };
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            player.x = canvas.width / 2 - player.width / 2;
+            player.y = canvas.height - (isMobile ? 110 : 140);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function handleCardClick(card) {
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+        }
+
+        function startGame(mode, event) {
+            if(event) event.stopPropagation();
+            resetGameData();
+            gameMode = mode;
+            
+            // UI 상태 변경
+            document.getElementById("start-screen").style.display = "none";
+            document.getElementById("result-screen").style.display = "none";
+            document.getElementById("ui-container").style.display = "flex";
+            document.getElementById("pause-btn").style.display = "flex";
+            
+            // --- 소리 버튼 위치 이동 ---
+            const sBtn = document.getElementById("sound-btn");
+            sBtn.classList.remove("sound-at-start");
+            sBtn.classList.add("sound-at-game");
+
+            isStarted = true; isGameOver = false; isWin = false; isContinued = false; isPaused = false;
+            updateUI();
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGameData() {
+            lives = 3; heartPieces = 0; score = 0; survivalTimer = 0;
+            objects = []; lastTime = 0; continueInvincibleTimer = 0; isInvincible = false;
+        }
+
+        function pauseGame() {
+            if (!isStarted || isGameOver || isWin || isPaused) return;
+            isPaused = true;
+            showPopup("잠시 멈춤", "", true);
+        }
+
+        function continueGame() {
+            isWin = false; isGameOver = false; isPaused = false;
+            isContinued = true; 
+            document.getElementById("result-screen").style.display = "none";
+            continueInvincibleTimer = 3; 
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function showPopup(msg, stats, isPauseMode) {
+            const screen = document.getElementById("result-screen");
+            const btnGroup = document.getElementById("result-btns");
+            document.getElementById("result-msg").innerHTML = msg;
+            document.getElementById("final-stats").innerHTML = stats;
+            
+            btnGroup.innerHTML = '';
+            const mainBtn = document.createElement("button");
+            mainBtn.className = "result-btn btn-main";
+            const subBtn = document.createElement("button");
+            subBtn.className = "result-btn btn-sub";
+            subBtn.innerText = "모드선택";
+            subBtn.onclick = () => {
+                // 모드 선택 페이지로 갈 때 버튼 위치 원복
+                const sBtn = document.getElementById("sound-btn");
+                sBtn.classList.remove("sound-at-game");
+                sBtn.classList.add("sound-at-start");
+                location.reload();
+            };
+
+            if (isPauseMode || isWin) {
+                mainBtn.innerText = "이어하기";
+                mainBtn.onclick = () => continueGame();
+            } else {
+                mainBtn.innerText = "다시하기";
+                mainBtn.onclick = () => startGame(gameMode);
+            }
+            btnGroup.appendChild(mainBtn);
+            btnGroup.appendChild(subBtn);
+            screen.style.display = "flex";
+        }
+
+        function updateUI() {
+            const list = document.getElementById('heart-list');
+            list.innerHTML = '';
+            for (let i = 0; i < lives; i++) addHeartToUI(100);
+            if (lives < 10 && (heartPieces > 0 || lives === 0)) addHeartToUI((heartPieces / 5) * 100);
+
+            const scoreDisplay = Math.floor(score);
+            const statsText = document.getElementById('stats-text');
+            if (gameMode === "survival") statsText.innerHTML = `SCORE: ${scoreDisplay}`;
+            else statsText.innerHTML = isContinued ? `잡은 파이브: ${scoreDisplay}` : `남은 파이브: ${Math.max(0, targetCatch - scoreDisplay)}`;
+        }
+
+        function addHeartToUI(fill) {
+            const unit = document.createElement('div'); unit.className = 'heart-unit';
+            const mask = document.createElement('div'); mask.className = 'heart-mask';
+            mask.style.height = fill + '%';
+            const img = document.createElement('img'); img.src = heartImgSrc; img.className = 'heart-img';
+            mask.appendChild(img); unit.appendChild(mask);
+            document.getElementById('heart-list').appendChild(unit);
+        }
+
+        window.addEventListener("keydown", (e) => {
+            keys[e.code] = true;
+            if (isStarted && !isGameOver && !isPaused) {
+                skipInput += e.key.toLowerCase();
+                if (skipInput.endsWith("skip")) {
+                    if (gameMode === "survival") survivalTimer = survivalDuration - 5;
+                    else score = targetCatch - 5;
+                    skipInput = "";
+                }
+            }
+        });
+        window.addEventListener("keyup", (e) => keys[e.code] = false);
+
+        window.addEventListener("touchstart", (e) => {
+            if(!isStarted || isPaused) return;
+            const touchX = e.touches[0].clientX;
+            if (touchX < window.innerWidth / 2) moveLeft = true; else moveRight = true;
+        }, {passive: false});
+        window.addEventListener("touchend", () => { moveLeft = false; moveRight = false; });
+
+        function createObject() {
+            const maxCount = isMobile ? 15 : 45; 
+            const spawnChance = (isMobile ? 0.05 : 0.12) + (survivalTimer * 0.0003);
+            if (objects.length < maxCount && Math.random() < spawnChance) {
+                let type = (gameMode === 'catch') ? (Math.random() < 0.5 ? 'item' : 'obstacle') : (Math.random() < 0.3 ? 'item' : 'obstacle');
+                spawnOneObject(type);
+            }
+        }
+
+        function spawnOneObject(type) {
+            let w = isMobile ? 30 : 60, h = (type === 'item') ? (isMobile ? 40 : 80) : (isMobile ? 30 : 60);
+            let xPos = Math.random() * (canvas.width - w);
+            let attempts = 0;
+            while (attempts < 5) {
+                let overlap = objects.some(o => o.y < 120 && xPos < o.x + o.width + 15 && xPos + w > o.x - 15);
+                if (!overlap) break;
+                xPos = Math.random() * (canvas.width - w);
+                attempts++;
+            }
+            let baseSpeed = isMobile ? 4.5 : 6;
+            let finalSpeed = Math.min(baseSpeed + (survivalTimer * 0.1), 40) + (Math.random() * 3);
+            objects.push({ x: xPos, y: -h, width: w, height: h, speed: finalSpeed, type: type, img: (type === 'item') ? itemImages[Math.floor(Math.random() * itemImages.length)] : rockImg });
+        }
+
+        function update(deltaTime) {
+            if (!isStarted || isGameOver || isWin || isPaused) return;
+            if (continueInvincibleTimer > 0) continueInvincibleTimer -= deltaTime / 1000;
+            survivalTimer += deltaTime / 1000; 
+
+            if (gameMode === "survival") {
+                if (!isContinued) {
+                    score = (targetSurvivalScore / survivalDuration) * survivalTimer;
+                    if (survivalTimer >= survivalDuration) { 
+                        score = targetSurvivalScore; isWin = true; 
+                        setTimeout(() => playSound(winSound), 300);
+                        finish(true); 
+                    }
+                } else { score = (targetSurvivalScore / survivalDuration) * survivalTimer; }
+            } else {
+                if (!isContinued && score >= targetCatch) { 
+                    score = targetCatch; isWin = true; 
+                    setTimeout(() => playSound(winSound), 300);
+                    finish(true); 
+                }
+            }
+
+            updateUI();
+            if ((keys["ArrowLeft"] || moveLeft) && player.x > 0) player.x -= player.speed;
+            if ((keys["ArrowRight"] || moveRight) && player.x < canvas.width - player.width) player.x += player.speed;
+
+            createObject();
+            for (let i = objects.length - 1; i >= 0; i--) {
+                let o = objects[i]; o.y += o.speed;
+                let pad = isMobile ? 8 : 12;
+                if (o.x < player.x + player.width - pad && o.x + o.width > player.x + pad && o.y < player.y + player.height - pad && o.y + o.height > player.y + pad) {
+                    
+                    if (o.type === 'item') { 
+                        playSound(hitSound);
+                        heartPieces++; score++; 
+                        if (heartPieces >= 5) { if (lives < 10) lives++; heartPieces = 0; } 
+                    }
+                    else if (!isInvincible && continueInvincibleTimer <= 0) { 
+                        lives--; 
+                        if (lives <= 0) { 
+                            isGameOver = true; 
+                            hitSound.pause(); hitSound.currentTime = 0;
+                            setTimeout(() => playSound(gameOverSound), 300);
+                            finish(false); 
+                        } else {
+                            playSound(hitSound);
+                        }
+                    }
+                    objects.splice(i, 1); continue;
+                }
+                if (o.y > canvas.height) objects.splice(i, 1);
+            }
+        }
+
+        function finish(victory) {
+            let stats = "";
+            let timeStr = `버틴 시간: ${Math.floor(survivalTimer)}초`;
+            if (gameMode === "survival") stats = `${timeStr}<br>최종 점수: ${Math.floor(score)}점`;
+            else stats = `${timeStr}<br>${isContinued ? `잡은 파이브: ${Math.floor(score)}명` : `남은 파이브: ${Math.max(0, targetCatch - Math.floor(score))}명`}`;
+            if (victory) showPopup((gameMode === 'catch') ? "성공!<br>215명의 파이브를 구출했습니다!" : "성공!<br>215초를 버텨냈습니다!", stats, false);
+            else showPopup("게임 오버!", stats, false);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!isStarted) return;
+            if (playerImg.complete) ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+            objects.forEach(o => { if (o.img.complete) ctx.drawImage(o.img, o.x, o.y, o.width, o.height); });
+        }
+
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            update(deltaTime);
+            draw();
+            if (!isGameOver && !isWin && !isPaused) requestAnimationFrame(gameLoop);
+        }
     </script>
 </body>
 </html>
+
+
+
+
