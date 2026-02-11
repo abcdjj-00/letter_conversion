@@ -418,7 +418,7 @@
         }
 
         function spawnOneObject(type) {
-            let w = isMobile ? 30 : 60, h = (type.includes('item') || type === 'speedItem') ? (isMobile ? 40 : 80) : (isMobile ? 30 : 60);
+            let w = isMobile ? 30 : 60, h = (type.includes('item') || type === 'speedItem') ? (isMobile ? 40 : 40) : (isMobile ? 30 : 60);
             let xPos = Math.random() * (canvas.width - w);
             let attempts = 0;
             while (attempts < 5) {
@@ -525,3 +525,4 @@
     </script>
 </body>
 </html>
+
