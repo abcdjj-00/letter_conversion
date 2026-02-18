@@ -352,7 +352,7 @@
                 // 모바일 가속: 215초에 26 도달 (26 - 4.5) / 215 = 약 0.1
                 // PC 가속: 215초에 약 31.8 도달 (6 + 215 * 0.12)
                 let accelRate = isMobile ? 0.1 : 0.12;
-                let finalSpeed = baseSpeed + (survivalTimer * accelRate) + (Math.random() * 3);
+                let finalSpeed = baseSpeed + (survivalTimer * accelRate) + (Math.random() * 2);
                 
                 let selectedImg = (type === 'item') ? itemImages[Math.floor(Math.random() * itemImages.length)] : rockImg;
                 objects.push({ x: xPos, y: -h, width: w, height: h, speed: finalSpeed, type: type, img: selectedImg });
@@ -428,4 +428,5 @@
     </script>
 </body>
 </html>
+
 
