@@ -51,25 +51,26 @@
         .mode-container { display: flex; flex-direction: row; gap: 30px; align-items: center; padding: 15px; }
         
         .mode-card { 
-            width: 300px; height: 300px; 
-            background-color: #f9f9f9; border-radius: 24px; padding: 60px 25px 40px 25px; 
+            width: 300px; height: 320px; 
+            background-color: #f9f9f9; border-radius: 24px; padding: 40px 25px; 
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
             position: relative; border: 1px solid rgba(0,0,0,0.05); cursor: pointer; overflow: hidden;
         }
 
-        .mode-card h2 { font-size: 22px; color: #222; text-align: center; transition: transform 0.4s ease; word-break: keep-all; line-height: 1.3; z-index: 2; }
-        .mode-desc { font-size: 14px; color: #666; line-height: 1.6; text-align: center; margin-top: 20px; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; word-break: keep-all; min-height: 50px; display: none; }
-        .start-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 12px; background-color: #333; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; margin-top: 25px; display: none; }
+        .mode-card h2 { font-size: 20px; color: #222; text-align: center; transition: transform 0.4s ease; word-break: keep-all; line-height: 1.3; z-index: 2; }
+        .mode-desc { font-size: 14px; color: #666; line-height: 1.6; text-align: center; margin-top: 15px; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; word-break: keep-all; display: none; }
+        
+        /* 최고 기록 스타일 */
+        .best-record { margin-top: 10px; font-size: 13px; color: #888; font-weight: bold; }
 
-        .mode-card:hover .mode-desc, .mode-card:hover .start-btn { display: block; }
+        .start-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 12px; background-color: #333; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; margin-top: 20px; display: none; }
+
         .mode-card:hover { background-color: #ffffff; box-shadow: 0 20px 40px rgba(0,0,0,0.12); transform: translateY(-10px); border-color: #eee; }
-        .mode-card:hover h2 { transform: translateY(-15px); }
-        .mode-card:hover .mode-desc { opacity: 1; transform: translateY(0); }
-        .mode-card:hover .start-btn { opacity: 1; transform: translateY(0); }
-
-        .mode-card.active { background-color: #ffffff; box-shadow: 0 20px 40px rgba(0,0,0,0.12); border-color: #eee; }
-        .mode-card.active h2 { transform: translateY(-10px); }
+        .mode-card:hover h2 { transform: translateY(-5px); }
+        .mode-card:hover .mode-desc, .mode-card:hover .start-btn { display: block; opacity: 1; transform: translateY(0); }
+        
+        .mode-card.active { background-color: #ffffff; box-shadow: 0 20px 40px rgba(0,0,0,0.12); border-color: #eee; height: 320px; }
         .mode-card.active .mode-desc, .mode-card.active .start-btn { display: block; opacity: 1; transform: translateY(0); }
         
         #result-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; color: white; background-color: rgba(30, 30, 35, 0.7); backdrop-filter: blur(5px); }
@@ -92,7 +93,7 @@
 
         .label-text { color: #333; font-size: 15px; font-weight: bold; }
         #heart-list { display: flex; gap: 5px; }
-        .heart-unit { position: relative; width: 28px; height: 28px; background-color: none ; border-radius: 4px; overflow: hidden;}
+        .heart-unit { position: relative; width: 28px; height: 28px; border-radius: 4px; overflow: hidden;}
         .heart-mask { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; transition: height 0.3s; }
         .heart-img { width: 28px; height: 28px; object-fit: contain; }
         .stats-row { font-size: 18px; font-weight: bold; color: #333; margin-top: 2px; }
@@ -103,8 +104,8 @@
 
         @media (max-width: 700px) { 
             .mode-container { flex-direction: column; gap: 12px; width: 90%; } 
-            .mode-card { width: 100%; height: 90px; min-height: 90px; padding: 0 20px; justify-content: center; transform: none !important; } 
-            .mode-card.active { height: 260px; padding: 40px 20px; justify-content: flex-start; }
+            .mode-card { width: 100%; height: 110px; min-height: 110px; padding: 15px 20px; justify-content: center; transform: none !important; } 
+            .mode-card.active { height: 280px; padding: 30px 20px; justify-content: flex-start; }
             .mode-card h2 { font-size: 18px; margin: 0; display: block; opacity: 1 !important; visibility: visible !important; }
             #game-title { font-size: 26px; margin-bottom: 25px; }
         }
@@ -142,11 +143,13 @@
         <div class="mode-container">
             <div class="mode-card" onclick="toggleCard(this, event)">
                 <h2>215초를 버텨라!</h2>
+                <div class="best-record" id="best-survival">최고 기록: 0초</div>
                 <div class="mode-desc">215초 동안 떨어지는 돌을 피해 생존하세요!</div>
                 <button class="start-btn" onclick="startGame('survival', event)">시작하기</button>
             </div>
             <div class="mode-card" onclick="toggleCard(this, event)">
                 <h2>215명의 파이브를 잡아라!</h2>
+                <div class="best-record" id="best-catch">최고 기록: 0명</div>
                 <div class="mode-desc">돌을 피해 파이브 215명을 상자 속으로 넣으세요!</div>
                 <button class="start-btn" onclick="startGame('catch', event)">시작하기</button>
             </div>
@@ -192,7 +195,15 @@
             document.getElementById('next-btn').style.display = (currentSlide === slides.length - 1) ? 'none' : 'flex';
         }
 
+        function loadBestRecords() {
+            const bestSurv = localStorage.getItem('bestSurvival') || 0;
+            const bestCat = localStorage.getItem('bestCatch') || 0;
+            document.getElementById('best-survival').innerText = `최고 기록: ${bestSurv}초`;
+            document.getElementById('best-catch').innerText = `최고 기록: ${bestCat}명`;
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            loadBestRecords();
             const descContent = document.getElementById('control-desc-content');
             if (isMobile) {
                 descContent.innerHTML = "<b>모바일:</b> 화면 하단 좌/우 영역을 터치하여 움직입니다.";
@@ -243,14 +254,9 @@
         const playerImg = loadImg('box.png'); 
 
         const itemImages = [
-            loadImg('1.5p.jpg'), 
-            loadImg('2.5p.jpg'), 
-            loadImg('3.5.png'),
-            loadImg('4.5.png'), 
-            loadImg('5.5.png'),
-            loadImg('6.5.png'),
-            loadImg('7.5.png'),
-            loadImg('8.5.png')
+            loadImg('1.5p.jpg'), loadImg('2.5p.jpg'), loadImg('3.5.png'),
+            loadImg('4.5.png'), loadImg('5.5.png'), loadImg('6.5.png'),
+            loadImg('7.5.png'), loadImg('8.5.png')
         ];
 
         const rockImg = loadImg('s.png');
@@ -318,14 +324,11 @@
         function updateUI() {
             const list = document.getElementById('heart-list');
             list.innerHTML = '';
-            // 현재 모드에 따른 하트 충전 필요 개수 설정 (잡기 10, 생존 5)
             const threshold = (gameMode === "catch") ? 10 : 5;
-            
             for (let i = 0; i < lives; i++) addHeartToUI(100);
             if (lives < 10 && (heartPieces > 0 || lives === 0)) {
                 addHeartToUI((heartPieces / threshold) * 100);
             }
-            
             const scoreDisplay = Math.floor(score);
             const statsText = document.getElementById('stats-text');
             if (gameMode === "survival") statsText.innerHTML = `SCORE: ${scoreDisplay}`;
@@ -371,8 +374,11 @@
                 let type = (gameMode === 'catch') ? (Math.random() < 0.5 ? 'item' : 'obstacle') : (Math.random() < 0.3 ? 'item' : 'obstacle');
                 let w = isMobile ? 30 : 60, h = (type === 'item') ? (isMobile ? 40 : 80) : (isMobile ? 30 : 60);
                 let xPos = Math.random() * (canvas.width - w);
-                let baseSpeed = isMobile ? 4.5 : 6;
-                let finalSpeed = Math.min(baseSpeed + (survivalTimer * 0.1), 40) + (Math.random() * 3);
+                
+                // --- 속도 고정 부분 (25로 고정) ---
+                let fixedSpeed = 25; 
+                let finalSpeed = fixedSpeed + (Math.random() * 3); // 25 ~ 28 사이의 속도
+                
                 let selectedImg = (type === 'item') ? itemImages[Math.floor(Math.random() * itemImages.length)] : rockImg;
                 objects.push({ x: xPos, y: -h, width: w, height: h, speed: finalSpeed, type: type, img: selectedImg });
             }
@@ -393,7 +399,6 @@
             }
             
             updateUI();
-            
             if ((keys["ArrowLeft"] || moveLeft) && player.x > 0) player.x -= player.speed;
             if ((keys["ArrowRight"] || moveRight) && player.x < canvas.width - player.width) player.x += player.speed;
             
@@ -407,14 +412,8 @@
                         playSound(hitSound); 
                         heartPieces++; 
                         score++; 
-                        
-                        // [수정] 모드에 따라 목숨이 차는 기준 설정
                         const threshold = (gameMode === "catch") ? 10 : 5;
-                        
-                        if (heartPieces >= threshold) { 
-                            if (lives < 10) lives++; 
-                            heartPieces = 0; 
-                        } 
+                        if (heartPieces >= threshold) { if (lives < 10) lives++; heartPieces = 0; } 
                     }
                     else if (!isInvincible && continueInvincibleTimer <= 0) { 
                         lives--; 
@@ -430,8 +429,29 @@
         function finish(victory) {
             let stats = "";
             let timeStr = `버틴 시간: ${Math.floor(survivalTimer)}초`;
-            if (gameMode === "survival") stats = `${timeStr}<br>최종 점수: ${Math.floor(score)}점`;
-            else stats = `${timeStr}<br>${isContinued ? `잡은 파이브: ${Math.floor(score)}명` : `남은 파이브: ${Math.max(0, targetCatch - Math.floor(score))}명`}`;
+            let currentScore = Math.floor(score);
+
+            // 최고 기록 저장 로직
+            if (gameMode === "survival") {
+                const currentSec = Math.floor(survivalTimer);
+                const savedBest = parseInt(localStorage.getItem('bestSurvival') || 0);
+                if (currentSec > savedBest) {
+                    localStorage.setItem('bestSurvival', currentSec);
+                    stats = `<b>🎉 최고 기록 경신!</b><br>${timeStr}<br>최종 점수: ${currentScore}점`;
+                } else {
+                    stats = `${timeStr}<br>최종 점수: ${currentScore}점`;
+                }
+            } else {
+                const savedBest = parseInt(localStorage.getItem('bestCatch') || 0);
+                if (currentScore > savedBest) {
+                    localStorage.setItem('bestCatch', currentScore);
+                    stats = `<b>🎉 최고 기록 경신!</b><br>${timeStr}<br>잡은 파이브: ${currentScore}명`;
+                } else {
+                    stats = `${timeStr}<br>${isContinued ? `잡은 파이브: ${currentScore}명` : `남은 파이브: ${Math.max(0, targetCatch - currentScore)}명`}`;
+                }
+            }
+            loadBestRecords(); // 카드 UI 업데이트
+
             if (victory) showPopup((gameMode === 'catch') ? "성공!<br>215명의 파이브를 구출했습니다!" : "성공!<br>215초를 버텨냈습니다!", stats, false);
             else showPopup("게임 오버!", stats, false);
         }
