@@ -92,7 +92,7 @@
 
         .label-text { color: #333; font-size: 15px; font-weight: bold; }
         #heart-list { display: flex; gap: 5px; }
-        .heart-unit { position: relative; width: 28px; height: 28px; background-color: none ; border-radius: 4px; overflow: hidden;}
+        .heart-unit { position: relative; width: 28px; height: 28px; border-radius: 4px; overflow: hidden;}
         .heart-mask { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; transition: height 0.3s; }
         .heart-img { width: 28px; height: 28px; object-fit: contain; }
         .stats-row { font-size: 18px; font-weight: bold; color: #333; margin-top: 2px; }
@@ -151,7 +151,7 @@
                 <button class="start-btn" onclick="startGame('catch', event)">시작하기</button>
             </div>
         </div>
-        <div id="control-guide">안내 문구 로딩중...</div>
+        <div id="control-guide">조작법 로딩 중...</div>
     </div>
 
     <button id="sound-btn" class="sound-at-start" onclick="toggleSound()">
@@ -192,7 +192,11 @@
             document.getElementById('next-btn').style.display = (currentSlide === slides.length - 1) ? 'none' : 'flex';
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // --- 조작법 및 오프닝 설정 ---
+        window.addEventListener('load', () => {
+            const guideText = isMobile ? "화면 좌/우 하단을 터치하여 움직이세요" : "방향키 (←, →)를 이용해 상자를 움직입니다.";
+            document.getElementById('control-guide').innerText = guideText;
+            
             const descContent = document.getElementById('control-desc-content');
             if (isMobile) {
                 descContent.innerHTML = "<b>모바일:</b> 화면 하단 좌/우 영역을 터치하여 움직입니다.";
@@ -255,7 +259,7 @@
         let lastTime = 0, objects = [], moveLeft = false, moveRight = false, keys = {};
         let gameMode = "", survivalTimer = 0, isContinued = false;
         const targetCatch = 215, survivalDuration = 215, targetSurvivalScore = 55555;
-        let skipInput = "", isInvincible = false, continueInvincibleTimer = 0; 
+        let isInvincible = false, continueInvincibleTimer = 0; 
 
         let player = { x: 0, y: 0, width: isMobile ? 30 : 60, height: isMobile ? 30 : 60, speed: isMobile ? 7.5 : 16 };
 
@@ -330,6 +334,14 @@
             mask.appendChild(img); unit.appendChild(mask);
             document.getElementById('heart-list').appendChild(unit);
         }
+
+        window.addEventListener("keydown", (e) => {
+            keys[e.code] = true;
+            if (e.key.toLowerCase() === 's' && isStarted && !isGameOver && !isWin) {
+                if (isPaused) continueGame(); else pauseGame();
+            }
+            // 스킵(skip) 관련 로직 삭제됨
+        });
         window.addEventListener("keyup", (e) => keys[e.code] = false);
 
         window.addEventListener("touchstart", (e) => {
@@ -347,12 +359,9 @@
                 let w = isMobile ? 30 : 60, h = (type === 'item') ? (isMobile ? 40 : 80) : (isMobile ? 30 : 60);
                 let xPos = Math.random() * (canvas.width - w);
                 
-                // --- 가속 로직 조정 ---
                 let baseSpeed = isMobile ? 4.5 : 6;
-                // 모바일 가속: 215초에 26 도달 (26 - 4.5) / 215 = 약 0.1
-                // PC 가속: 215초에 약 31.8 도달 (6 + 215 * 0.12)
                 let accelRate = isMobile ? 0.1 : 0.12;
-                let finalSpeed = baseSpeed + (survivalTimer * accelRate) + (Math.random() * 2);
+                let finalSpeed = baseSpeed + (survivalTimer * accelRate) + (Math.random() * 3);
                 
                 let selectedImg = (type === 'item') ? itemImages[Math.floor(Math.random() * itemImages.length)] : rockImg;
                 objects.push({ x: xPos, y: -h, width: w, height: h, speed: finalSpeed, type: type, img: selectedImg });
@@ -428,5 +437,3 @@
     </script>
 </body>
 </html>
-
-
