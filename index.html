@@ -330,21 +330,6 @@
             mask.appendChild(img); unit.appendChild(mask);
             document.getElementById('heart-list').appendChild(unit);
         }
-
-        window.addEventListener("keydown", (e) => {
-            keys[e.code] = true;
-            if (e.key.toLowerCase() === 's' && isStarted && !isGameOver && !isWin) {
-                if (isPaused) continueGame(); else pauseGame();
-            }
-            if (isStarted && !isGameOver && !isPaused) {
-                skipInput += e.key.toLowerCase();
-                if (skipInput.endsWith("skip")) {
-                    if (gameMode === "survival") survivalTimer = survivalDuration - 5;
-                    else score = targetCatch - 5;
-                    skipInput = "";
-                }
-            }
-        });
         window.addEventListener("keyup", (e) => keys[e.code] = false);
 
         window.addEventListener("touchstart", (e) => {
@@ -443,3 +428,4 @@
     </script>
 </body>
 </html>
+
