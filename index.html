@@ -350,13 +350,13 @@
         // --- 버티기 모드 최적화 생성 함수 ---
         function createObject() {
             // 버티기 모드일 때 훨씬 더 많이 쏟아지게 설정
-            const maxCount = (gameMode === 'survival') ? (isMobile ? 40 : 100) : (isMobile ? 20 : 50);
+            const maxCount = (gameMode === 'survival') ? (isMobile ? 40 : 80) : (isMobile ? 20 : 50);
             const baseChance = (gameMode === 'survival') ? (isMobile ? 0.2 : 0.35) : (isMobile ? 0.08 : 0.15);
             const spawnChance = baseChance + (survivalTimer * 0.001);
 
             if (objects.length < maxCount && Math.random() < spawnChance) {
                 // 버티기 모드는 돌 비율 상향
-                let itemRatio = (gameMode === 'survival') ? 0.25 : 0.5;
+                let itemRatio = (gameMode === 'survival') ? 0.5 : 0.5;
                 let type = (Math.random() < itemRatio) ? 'item' : 'obstacle';
                 
                 let w = isMobile ? 32 : 62;
@@ -444,3 +444,4 @@
     </script>
 </body>
 </html>
+
