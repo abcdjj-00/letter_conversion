@@ -151,7 +151,7 @@
                 <button class="start-btn" onclick="startGame('catch', event)">시작하기</button>
             </div>
         </div>
-        <div id="control-guide">조작법 로딩 중...</div>
+        <div id="control-guide">방향키 또는 터치로 이동하세요.</div>
     </div>
 
     <button id="sound-btn" class="sound-at-start" onclick="toggleSound()">
@@ -192,11 +192,9 @@
             document.getElementById('next-btn').style.display = (currentSlide === slides.length - 1) ? 'none' : 'flex';
         }
 
-        // --- 조작법 및 오프닝 설정 ---
         window.addEventListener('load', () => {
             const guideText = isMobile ? "화면 좌/우 하단을 터치하여 움직이세요" : "방향키 (←, →)를 이용해 상자를 움직입니다.";
             document.getElementById('control-guide').innerText = guideText;
-            
             const descContent = document.getElementById('control-desc-content');
             if (isMobile) {
                 descContent.innerHTML = "<b>모바일:</b> 화면 하단 좌/우 영역을 터치하여 움직입니다.";
@@ -245,13 +243,11 @@
 
         function loadImg(src) { const img = new Image(); img.src = src; return img; }
         const playerImg = loadImg('box.png'); 
-
         const itemImages = [
             loadImg('1.5p.jpg'), loadImg('2.5p.jpg'), loadImg('3.5.png'),
             loadImg('4.5.png'), loadImg('5.5.png'), loadImg('6.5.png'),
             loadImg('7.5.png'), loadImg('8.5.png')
         ];
-
         const rockImg = loadImg('s.png');
         const heartImgSrc = 'main.png'; 
 
@@ -259,9 +255,9 @@
         let lastTime = 0, objects = [], moveLeft = false, moveRight = false, keys = {};
         let gameMode = "", survivalTimer = 0, isContinued = false;
         const targetCatch = 215, survivalDuration = 215, targetSurvivalScore = 55555;
-        let isInvincible = false, continueInvincibleTimer = 0; 
+        let continueInvincibleTimer = 0; 
 
-        let player = { x: 0, y: 0, width: isMobile ? 30 : 60, height: isMobile ? 30 : 60, speed: isMobile ? 7.5 : 16 };
+        let player = { x: 0, y: 0, width: isMobile ? 35 : 65, height: isMobile ? 35 : 65, speed: isMobile ? 8 : 17 };
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -275,7 +271,7 @@
         function startGame(mode, event) {
             if(event) event.stopPropagation();
             lives = 3; heartPieces = 0; score = 0; survivalTimer = 0;
-            objects = []; continueInvincibleTimer = 0; isInvincible = false;
+            objects = []; continueInvincibleTimer = 0;
             gameMode = mode;
             document.getElementById("start-screen").style.display = "none";
             document.getElementById("result-screen").style.display = "none";
@@ -315,7 +311,8 @@
         function updateUI() {
             const list = document.getElementById('heart-list');
             list.innerHTML = '';
-            const threshold = (gameMode === "catch") ? 10 : 5;
+            // 버티기 모드일 때 아이템이 많이 나오므로 회복 난이도 조절
+            const threshold = (gameMode === "survival") ? 15 : 10;
             for (let i = 0; i < lives; i++) addHeartToUI(100);
             if (lives < 10 && (heartPieces > 0 || lives === 0)) {
                 addHeartToUI((heartPieces / threshold) * 100);
@@ -340,7 +337,6 @@
             if (e.key.toLowerCase() === 's' && isStarted && !isGameOver && !isWin) {
                 if (isPaused) continueGame(); else pauseGame();
             }
-            // 스킵(skip) 관련 로직 삭제됨
         });
         window.addEventListener("keyup", (e) => keys[e.code] = false);
 
@@ -351,17 +347,25 @@
         }, {passive: false});
         window.addEventListener("touchend", () => { moveLeft = false; moveRight = false; });
 
+        // --- 버티기 모드 최적화 생성 함수 ---
         function createObject() {
-            const maxCount = isMobile ? 15 : 45; 
-            const spawnChance = (isMobile ? 0.05 : 0.12) + (survivalTimer * 0.0003);
+            // 버티기 모드일 때 훨씬 더 많이 쏟아지게 설정
+            const maxCount = (gameMode === 'survival') ? (isMobile ? 40 : 100) : (isMobile ? 20 : 50);
+            const baseChance = (gameMode === 'survival') ? (isMobile ? 0.2 : 0.35) : (isMobile ? 0.08 : 0.15);
+            const spawnChance = baseChance + (survivalTimer * 0.001);
+
             if (objects.length < maxCount && Math.random() < spawnChance) {
-                let type = (gameMode === 'catch') ? (Math.random() < 0.5 ? 'item' : 'obstacle') : (Math.random() < 0.3 ? 'item' : 'obstacle');
-                let w = isMobile ? 30 : 60, h = (type === 'item') ? (isMobile ? 40 : 80) : (isMobile ? 30 : 60);
+                // 버티기 모드는 돌 비율 상향
+                let itemRatio = (gameMode === 'survival') ? 0.25 : 0.5;
+                let type = (Math.random() < itemRatio) ? 'item' : 'obstacle';
+                
+                let w = isMobile ? 32 : 62;
+                let h = (type === 'item') ? (isMobile ? 42 : 82) : (isMobile ? 32 : 62);
                 let xPos = Math.random() * (canvas.width - w);
                 
-                let baseSpeed = isMobile ? 4.5 : 6;
-                let accelRate = isMobile ? 0.1 : 0.12;
-                let finalSpeed = baseSpeed + (survivalTimer * accelRate) + (Math.random() * 3);
+                let baseSpeed = isMobile ? 5 : 7;
+                let accelRate = isMobile ? 0.12 : 0.15;
+                let finalSpeed = baseSpeed + (survivalTimer * accelRate) + (Math.random() * 5);
                 
                 let selectedImg = (type === 'item') ? itemImages[Math.floor(Math.random() * itemImages.length)] : rockImg;
                 objects.push({ x: xPos, y: -h, width: w, height: h, speed: finalSpeed, type: type, img: selectedImg });
@@ -374,12 +378,14 @@
             survivalTimer += deltaTime / 1000; 
             
             if (gameMode === "survival") {
-                if (!isContinued) {
-                    score = (targetSurvivalScore / survivalDuration) * survivalTimer;
-                    if (survivalTimer >= survivalDuration) { score = targetSurvivalScore; isWin = true; stopSound(hitSound); setTimeout(() => playSound(winSound), 50); finish(true); return; }
-                } else { score = (targetSurvivalScore / survivalDuration) * survivalTimer; }
+                score = (targetSurvivalScore / survivalDuration) * survivalTimer;
+                if (!isContinued && survivalTimer >= survivalDuration) {
+                    score = targetSurvivalScore; isWin = true; finish(true); return;
+                }
             } else {
-                if (!isContinued && score >= targetCatch) { score = targetCatch; isWin = true; stopSound(hitSound); setTimeout(() => playSound(winSound), 50); finish(true); return; }
+                if (!isContinued && score >= targetCatch) {
+                    score = targetCatch; isWin = true; finish(true); return;
+                }
             }
             
             updateUI();
@@ -390,19 +396,20 @@
             
             for (let i = objects.length - 1; i >= 0; i--) {
                 let o = objects[i]; o.y += o.speed;
-                let pad = isMobile ? 8 : 12;
+                let pad = isMobile ? 6 : 10;
                 if (o.x < player.x + player.width - pad && o.x + o.width > player.x + pad && o.y < player.y + player.height - pad && o.y + o.height > player.y + pad) {
                     if (o.type === 'item') { 
                         playSound(hitSound); 
                         heartPieces++; 
-                        score++; 
-                        const threshold = (gameMode === "catch") ? 10 : 5;
+                        if (gameMode === "catch") score++;
+                        const threshold = (gameMode === "survival") ? 15 : 10;
                         if (heartPieces >= threshold) { if (lives < 10) lives++; heartPieces = 0; } 
-                    }
-                    else if (!isInvincible && continueInvincibleTimer <= 0) { 
+                    } else if (continueInvincibleTimer <= 0) { 
                         lives--; 
-                        if (lives <= 0) { isGameOver = true; stopSound(hitSound); setTimeout(() => playSound(gameOverSound), 50); finish(false); } 
-                        else playSound(hitSound);
+                        if (lives <= 0) { 
+                            isGameOver = true; stopSound(hitSound); 
+                            setTimeout(() => playSound(gameOverSound), 50); finish(false); 
+                        } else playSound(hitSound);
                     }
                     objects.splice(i, 1); continue;
                 }
@@ -411,19 +418,19 @@
         }
 
         function finish(victory) {
-            let stats = "";
-            let timeStr = `버틴 시간: ${Math.floor(survivalTimer)}초`;
-            if (gameMode === "survival") stats = `${timeStr}<br>최종 점수: ${Math.floor(score)}점`;
-            else stats = `${timeStr}<br>${isContinued ? `잡은 파이브: ${Math.floor(score)}명` : `남은 파이브: ${Math.max(0, targetCatch - Math.floor(score))}명`}`;
-            if (victory) showPopup((gameMode === 'catch') ? "성공!<br>215명의 파이브를 구출했습니다!" : "성공!<br>215초를 버텨냈습니다!", stats, false);
-            else showPopup("게임 오버!", stats, false);
+            if (victory) { stopSound(hitSound); setTimeout(() => playSound(winSound), 50); }
+            let stats = `버틴 시간: ${Math.floor(survivalTimer)}초<br>`;
+            if (gameMode === "survival") stats += `최종 점수: ${Math.floor(score)}점`;
+            else stats += isContinued ? `잡은 파이브: ${Math.floor(score)}명` : `남은 파이브: ${Math.max(0, targetCatch - Math.floor(score))}명`;
+            
+            showPopup(victory ? (gameMode === 'catch' ? "구출 성공!" : "생존 성공!") : "게임 오버!", stats, false);
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (!isStarted) return;
             if (playerImg.complete) ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-            objects.forEach(o => { if (o.img.complete) ctx.drawImage(o.img, o.x, o.y, o.width, o.height); });
+            objects.forEach(o => { if (o.img.complete) ctx.drawImage(o.img, o.x, o.y, o.width, o.height); })
         }
 
         function gameLoop(timestamp) {
