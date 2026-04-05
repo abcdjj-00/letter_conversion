@@ -6,13 +6,11 @@
     <title>파이브와 돌</title>
     <link rel="icon" href="main.png" type="image/png">
     <style>
-        /* --- 기존 스타일 유지 및 설정 버튼 스타일 추가 --- */
         :root {
             --bg-color: #ffffff;
             --text-color: #333333;
             --card-bg: #f9f9f9;
             --overlay-bg: rgba(255, 255, 255, 0.95);
-            --accent: #333;
         }
 
         [data-theme='dark'] {
@@ -20,7 +18,6 @@
             --text-color: #f0f0f0;
             --card-bg: #2a2a2a;
             --overlay-bg: rgba(26, 26, 26, 0.95);
-            --accent: #fff;
         }
 
         * { touch-action: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,48 +30,73 @@
             display: flex; justify-content: center; align-items: center; z-index: 2000;
         }
         .modal-box {
-            width: 90%; max-width: 420px; background: var(--bg-color); border-radius: 20px;
+            width: 90%; max-width: 400px; background: var(--bg-color); border-radius: 20px;
             padding: 25px; position: relative; text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text-color);
         }
 
         #settings-overlay { display: none; }
-        .setting-item { margin-bottom: 24px; text-align: left; }
-        .setting-label { font-size: 14px; font-weight: bold; margin-bottom: 10px; display: block; color: var(--text-color); }
-        .setting-row { display: flex; flex-wrap: wrap; gap: 8px; }
-        
-        .setting-btn { 
-            padding: 8px 12px; border-radius: 8px; border: 1.5px solid #ddd; 
-            background: var(--card-bg); color: var(--text-color); 
-            cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s;
-        }
-        .setting-btn.active { border-color: var(--accent); background: var(--accent); color: var(--bg-color); }
+        .setting-item { margin-bottom: 20px; text-align: left; }
+        .setting-label { font-size: 14px; font-weight: bold; margin-bottom: 8px; display: block; }
+        .setting-row { display: flex; gap: 10px; }
+        .setting-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; background: var(--card-bg); color: var(--text-color); cursor: pointer; font-size: 13px; font-weight: bold; transition: all 0.2s; }
+        .setting-btn.active { border-color: #333; background: #333; color: #fff; }
+        [data-theme='dark'] .setting-btn.active { border-color: #f0f0f0; background: #f0f0f0; color: #1a1a1a; }
 
-        /* 기존 게임 화면 요소들 스타일 유지 */
+        /* 사운드 선택 버튼 그룹 */
+        .sound-select-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .sound-select-btn {
+            flex: 1; min-width: calc(50% - 4px);
+            padding: 10px 6px; border-radius: 8px;
+            border: 1.5px solid #ddd; background: var(--card-bg);
+            color: var(--text-color); cursor: pointer; font-size: 12px;
+            font-weight: bold; transition: all 0.2s; text-align: center;
+            position: relative;
+        }
+        .sound-select-btn.active {
+            border-color: #333; background: #333; color: #fff;
+        }
+        [data-theme='dark'] .sound-select-btn.active {
+            border-color: #f0f0f0; background: #f0f0f0; color: #1a1a1a;
+        }
+        .sound-select-btn .sound-name { display: block; font-size: 12px; }
+        .sound-select-btn .sound-desc { display: block; font-size: 10px; opacity: 0.65; margin-top: 2px; font-weight: normal; }
+        .sound-preview-btn {
+            display: inline-block; margin-top: 6px;
+            padding: 4px 10px; border-radius: 6px;
+            border: 1px solid #ddd; background: var(--card-bg);
+            color: var(--text-color); cursor: pointer; font-size: 11px;
+            transition: all 0.15s;
+        }
+        .sound-preview-btn:hover { background: #eee; }
+
         .opening-slide { display: none; min-height: 280px; flex-direction: column; }
         .opening-slide.active { display: flex; animation: fadeIn 0.3s; }
         .opening-img { width: 100%; height: 150px; object-fit: contain; margin-bottom: 20px; border-radius: 10px; }
         .opening-title { font-size: 20px; font-weight: bold; margin-bottom: 15px; }
         .opening-desc { font-size: 14px; line-height: 1.6; text-align: left; opacity: 0.9; }
+        .spacer { margin-bottom: 3.6em; } 
         .opening-footer { display: flex; gap: 10px; margin-top: 20px; }
         .op-btn { flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; border: none; font-size: 14px; }
         #close-opening { background: #eee; color: #333; }
         #never-show-opening { background: #444; color: white; }
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: #333; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; opacity: 0.8; z-index: 2100; }
-        #next-btn { right: -15px; } #prev-btn { left: -15px; }
-
+        #next-btn { right: -15px; }
+        #prev-btn { left: -15px; }
+        
         #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--overlay-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
         #game-title { font-size: 32px; font-weight: 900; margin-bottom: 40px; }
         .mode-container { display: flex; flex-direction: row; gap: 30px; align-items: center; padding: 15px; }
         .mode-card { width: 300px; height: 300px; background-color: var(--card-bg); border-radius: 24px; padding: 60px 25px 40px 25px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: all 0.4s; position: relative; border: 1px solid rgba(0,0,0,0.05); cursor: pointer; overflow: hidden; }
         .mode-card h2 { font-size: 22px; text-align: center; word-break: keep-all; line-height: 1.3; }
-        .mode-desc { font-size: 14px; opacity: 0; transform: translateY(20px); transition: all 0.4s; margin-top: 20px; display: none; text-align: center; }
+        .mode-desc { font-size: 14px; opacity: 0; transform: translateY(20px); transition: all 0.4s; margin-top: 20px; display: none; }
         .start-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 12px; background-color: #333; cursor: pointer; opacity: 0; transform: translateY(20px); transition: all 0.4s; margin-top: 25px; display: none; }
         .mode-card:hover .mode-desc, .mode-card:hover .start-btn, .mode-card.active .mode-desc, .mode-card.active .start-btn { display: block; opacity: 1; transform: translateY(0); }
         .mode-card:hover h2, .mode-card.active h2 { transform: translateY(-15px); }
 
         #settings-btn { position: fixed; top: 20px; right: 20px; width: 35px; height: 35px; background: none; border: none; cursor: pointer; z-index: 150; }
         #settings-icon { width: 100%; height: 100%; fill: var(--text-color); }
+
         #ui-container { position: fixed; top: 15px; left: 15px; display: none; flex-direction: column; gap: 8px; pointer-events: none; z-index: 50; }
         #pause-btn { position: fixed; top: 22px; right: 65px; width: 30px; height: 30px; background: none; border: none; display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 150; }
         #pause-btn::before, #pause-btn::after { content: ''; width: 4px; height: 18px; background-color: var(--text-color); border-radius: 2px; position: absolute; }
@@ -85,10 +107,6 @@
         .heart-img { width: 28px; height: 28px; object-fit: contain; }
         
         #result-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; color: white; background-color: rgba(30, 30, 35, 0.8); backdrop-filter: blur(5px); }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .result-btn { padding: 12px 24px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-main { background: #fff; color: #333; }
-        .btn-sub { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid #fff; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @media (max-width: 700px) { 
@@ -116,7 +134,7 @@
             <div class="opening-slide">
                 <h3 class="opening-title">🎮 조작 방법</h3>
                 <p class="opening-desc" id="control-desc-content"></p>
-                <div style="height: 50px;"></div>
+                <div class="spacer"></div>
                 <div class="opening-footer">
                     <button id="close-opening" class="op-btn" onclick="closeOpening(false)">닫기</button>
                     <button id="never-show-opening" class="op-btn" onclick="closeOpening(true)">다시 보지 않기</button>
@@ -140,26 +158,52 @@
             </div>
 
             <div class="setting-item">
-                <span class="setting-label">파이브(아이템) 사운드</span>
-                <div class="setting-row" id="item-sound-group">
-                    <button class="setting-btn active" onclick="setGameSound('item', '25.mp3', this)">사운드 1 (기본)</button>
-                    <button class="setting-btn" onclick="setGameSound('item', '1s.mp3', this)">사운드 2</button>
-                    <button class="setting-btn" onclick="setGameSound('item', '3s.mp3', this)">사운드 3</button>
-                    <button class="setting-btn" onclick="setGameSound('item', '4s.mp3', this)">사운드 4</button>
+                <span class="setting-label">파이브(아이템) 소리</span>
+                <div class="sound-select-row" id="item-sound-row">
+                    <button class="sound-select-btn active" data-file="25.mp3" onclick="selectSound('item', '25.mp3', this)">
+                        <span class="sound-name">🎵 소리 1</span>
+                        <span class="sound-desc">기본음</span>
+                    </button>
+                    <button class="sound-select-btn" data-file="1s.mp3" onclick="selectSound('item', '1s.mp3', this)">
+                        <span class="sound-name">🎵 소리 2</span>
+                        <span class="sound-desc">1s.mp3</span>
+                    </button>
+                    <button class="sound-select-btn" data-file="3s.mp3" onclick="selectSound('item', '3s.mp3', this)">
+                        <span class="sound-name">🎵 소리 3</span>
+                        <span class="sound-desc">3s.mp3</span>
+                    </button>
+                    <button class="sound-select-btn" data-file="4s.mp3" onclick="selectSound('item', '4s.mp3', this)">
+                        <span class="sound-name">🎵 소리 4</span>
+                        <span class="sound-desc">4s.mp3</span>
+                    </button>
                 </div>
+                <button class="sound-preview-btn" onclick="previewSound('item')">▶ 미리 듣기</button>
             </div>
 
             <div class="setting-item">
-                <span class="setting-label">돌(장애물) 사운드</span>
-                <div class="setting-row" id="rock-sound-group">
-                    <button class="setting-btn" onclick="setGameSound('rock', '25.mp3', this)">사운드 1</button>
-                    <button class="setting-btn active" onclick="setGameSound('rock', '1s.mp3', this)">사운드 2 (기본)</button>
-                    <button class="setting-btn" onclick="setGameSound('rock', '3s.mp3', this)">사운드 3</button>
-                    <button class="setting-btn" onclick="setGameSound('rock', '4s.mp3', this)">사운드 4</button>
+                <span class="setting-label">돌(장애물) 소리</span>
+                <div class="sound-select-row" id="rock-sound-row">
+                    <button class="sound-select-btn" data-file="25.mp3" onclick="selectSound('rock', '25.mp3', this)">
+                        <span class="sound-name">🪨 소리 1</span>
+                        <span class="sound-desc">25.mp3</span>
+                    </button>
+                    <button class="sound-select-btn active" data-file="1s.mp3" onclick="selectSound('rock', '1s.mp3', this)">
+                        <span class="sound-name">🪨 소리 2</span>
+                        <span class="sound-desc">기본음</span>
+                    </button>
+                    <button class="sound-select-btn" data-file="3s.mp3" onclick="selectSound('rock', '3s.mp3', this)">
+                        <span class="sound-name">🪨 소리 3</span>
+                        <span class="sound-desc">3s.mp3</span>
+                    </button>
+                    <button class="sound-select-btn" data-file="4s.mp3" onclick="selectSound('rock', '4s.mp3', this)">
+                        <span class="sound-name">🪨 소리 4</span>
+                        <span class="sound-desc">4s.mp3</span>
+                    </button>
                 </div>
+                <button class="sound-preview-btn" onclick="previewSound('rock')">▶ 미리 듣기</button>
             </div>
 
-            <button class="op-btn" style="width:100%; background:#333; color:white; margin-top:10px;" onclick="closeSettings()">설정 완료</button>
+            <button class="op-btn" style="width:100%; background:#333; color:white; margin-top:5px;" onclick="closeSettings()">저장 및 닫기</button>
         </div>
     </div>
 
@@ -205,9 +249,12 @@
         const ctx = canvas.getContext("2d");
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // --- 사운드 관리 (수정된 로직) ---
-        let hitSound = new Audio('25.mp3');      // 아이템 기본음
-        let rockHitSound = new Audio('1s.mp3');  // 장애물 기본음
+        // --- 사운드 관리 변수 ---
+        // 아이템 기본음: 25.mp3 / 장애물 기본음: 1s.mp3
+        let currentItemSoundFile = '25.mp3';
+        let currentRockSoundFile = '1s.mp3';
+        let hitSound = new Audio('25.mp3');
+        let rockHitSound = new Audio('1s.mp3');
         const gameOverSound = new Audio('2s.mp3');
         const winSound = new Audio('15.mp3');
 
@@ -216,42 +263,46 @@
         
         function setTheme(mode) {
             document.body.setAttribute('data-theme', mode);
-            document.querySelectorAll('#theme-light, #theme-dark').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.setting-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`theme-${mode}`).classList.add('active');
         }
 
-        // 사운드 교체 함수
-        function setGameSound(type, fileName, btnElement) {
-            // 사운드 객체 교체
+        // 사운드 선택 (버튼 방식)
+        function selectSound(type, file, btnEl) {
             if (type === 'item') {
-                hitSound = new Audio(fileName);
-                // UI 업데이트
-                document.querySelectorAll('#item-sound-group .setting-btn').forEach(btn => btn.classList.remove('active'));
-                hitSound.play().catch(()=>{}); // 선택 시 미리듣기
+                currentItemSoundFile = file;
+                hitSound = new Audio(file);
+                // 아이템 버튼 active 갱신
+                document.querySelectorAll('#item-sound-row .sound-select-btn').forEach(b => b.classList.remove('active'));
             } else {
-                rockHitSound = new Audio(fileName);
-                // UI 업데이트
-                document.querySelectorAll('#rock-sound-group .setting-btn').forEach(btn => btn.classList.remove('active'));
-                rockHitSound.play().catch(()=>{}); // 선택 시 미리듣기
+                currentRockSoundFile = file;
+                rockHitSound = new Audio(file);
+                // 장애물 버튼 active 갱신
+                document.querySelectorAll('#rock-sound-row .sound-select-btn').forEach(b => b.classList.remove('active'));
             }
-            btnElement.classList.add('active');
+            btnEl.classList.add('active');
+        }
+
+        // 미리 듣기
+        function previewSound(type) {
+            const file = (type === 'item') ? currentItemSoundFile : currentRockSoundFile;
+            const snd = new Audio(file);
+            snd.play().catch(() => {});
         }
 
         function playSound(type) {
-            try {
-                if (type === 'item') {
-                    hitSound.currentTime = 0; hitSound.play().catch(()=>{});
-                } else if (type === 'rock') {
-                    rockHitSound.currentTime = 0; rockHitSound.play().catch(()=>{});
-                } else if (type === 'win') {
-                    winSound.currentTime = 0; winSound.play().catch(()=>{});
-                } else if (type === 'over') {
-                    gameOverSound.currentTime = 0; gameOverSound.play().catch(()=>{});
-                }
-            } catch(e) {}
+            if (type === 'item') {
+                hitSound.currentTime = 0; hitSound.play().catch(()=>{});
+            } else if (type === 'rock') {
+                rockHitSound.currentTime = 0; rockHitSound.play().catch(()=>{});
+            } else if (type === 'win') {
+                winSound.currentTime = 0; winSound.play().catch(()=>{});
+            } else if (type === 'over') {
+                gameOverSound.currentTime = 0; gameOverSound.play().catch(()=>{});
+            }
         }
 
-        // --- 게임 엔진 및 UI 로직 (기존 유지) ---
+        // --- 기존 로직 ---
         let currentSlide = 0;
         const slides = document.querySelectorAll('.opening-slide');
         function changeSlide(n, event) {
