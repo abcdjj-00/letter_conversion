@@ -102,6 +102,7 @@
 </head>
 <body onclick="clearCardSelection(event)">
 
+    <!-- 오프닝 가이드 -->
     <div id="opening-overlay" class="overlay">
         <div id="opening-box" class="modal-box" onclick="event.stopPropagation()">
             <div class="opening-slide active">
@@ -128,6 +129,7 @@
         </div>
     </div>
 
+    <!-- 설정 팝업 -->
     <div id="settings-overlay" class="overlay" onclick="closeSettings()">
         <div class="modal-box" onclick="event.stopPropagation()">
             <h3 style="margin-bottom:20px;">⚙️ 게임 설정</h3>
@@ -145,7 +147,7 @@
                 <div class="setting-row" id="item-sound-group">
                     <button class="setting-btn active" onclick="setGameSound('item', '25.mp3', this)">레쟌도</button>
                     <button class="setting-btn" onclick="setGameSound('item', '1s.mp3', this)">쓰레빠</button>
-                    <button class="setting-btn" onclick="setGameSound('item', '4s.mp3', this)">나 울어</button>
+                    <button class="setting-btn" onclick="setGameSound('item', '3s.mp3', this)">이게 뭐야</button>
                 </div>
             </div>
 
@@ -154,7 +156,7 @@
                 <div class="setting-row" id="rock-sound-group">
                     <button class="setting-btn" onclick="setGameSound('rock', '25.mp3', this)">레쟌도</button>
                     <button class="setting-btn active" onclick="setGameSound('rock', '1s.mp3', this)">쓰레빠</button>
-                    <button class="setting-btn" onclick="setGameSound('rock', '4s.mp3', this)">나 울어</button>
+                    <button class="setting-btn" onclick="setGameSound('rock', '3s.mp3', this)">이게 뭐야</button>
                 </div>
             </div>
 
@@ -162,6 +164,7 @@
         </div>
     </div>
 
+    <!-- 시작 화면 -->
     <div id="start-screen">
         <div id="game-title">파이브와 돌</div>
         <div class="mode-container">
@@ -205,8 +208,8 @@
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         // --- 사운드 관리 ---
-        let hitSound = new Audio('25.mp3');      // 아이템 기본: 레쟌도
-        let rockHitSound = new Audio('1s.mp3');  // 장애물 기본: 쓰레빠
+        let hitSound = new Audio('25.mp3');
+        let rockHitSound = new Audio('1s.mp3');
         const gameOverSound = new Audio('2s.mp3');
         const winSound = new Audio('15.mp3');
 
@@ -219,7 +222,6 @@
             document.getElementById(`theme-${mode}`).classList.add('active');
         }
 
-        // 사운드 교체 함수
         function setGameSound(type, fileName, btnElement) {
             if (type === 'item') {
                 hitSound = new Audio(fileName);
@@ -235,15 +237,10 @@
 
         function playSound(type) {
             try {
-                if (type === 'item') {
-                    hitSound.currentTime = 0; hitSound.play().catch(()=>{});
-                } else if (type === 'rock') {
-                    rockHitSound.currentTime = 0; rockHitSound.play().catch(()=>{});
-                } else if (type === 'win') {
-                    winSound.currentTime = 0; winSound.play().catch(()=>{});
-                } else if (type === 'over') {
-                    gameOverSound.currentTime = 0; gameOverSound.play().catch(()=>{});
-                }
+                if (type === 'item') { hitSound.currentTime = 0; hitSound.play().catch(()=>{}); }
+                else if (type === 'rock') { rockHitSound.currentTime = 0; rockHitSound.play().catch(()=>{}); }
+                else if (type === 'win') { winSound.currentTime = 0; winSound.play().catch(()=>{}); }
+                else if (type === 'over') { gameOverSound.currentTime = 0; gameOverSound.play().catch(()=>{}); }
             } catch(e) {}
         }
 
@@ -299,13 +296,16 @@
             updateUI(); lastTime = performance.now(); requestAnimationFrame(gameLoop);
         }
 
+        // 구출 모드의 난이도 설정에 맞춰 생존 모드를 조절
         function createObject() {
-            const maxCount = (gameMode === 'survival') ? (isMobile ? 35 : 90) : (isMobile ? 18 : 45);
-            const baseChance = (gameMode === 'survival') ? (isMobile ? 0.2 : 0.3) : (isMobile ? 0.08 : 0.15);
-            const spawnChance = baseChance + (survivalTimer * 0.001);
+            // [수정됨] 생존 모드도 이제 구출 모드와 동일한 수치를 사용합니다.
+            const maxCount = isMobile ? 18 : 45; // 기존 생존모드(35/90)에서 절반 하향
+            const baseChance = isMobile ? 0.08 : 0.15; // 기존 생존모드(0.2/0.3)에서 절반 이하 하향
+            const spawnChance = baseChance + (survivalTimer * 0.0005); // 가속 증가량도 절반 완화
 
             if (objects.length < maxCount && Math.random() < spawnChance) {
-                let itemRatio = (gameMode === 'survival') ? 0.35 : 0.5;
+                // [수정됨] 생존 모드도 아이템이 나올 확률을 50%로 상향
+                let itemRatio = 0.5; 
                 let type = (Math.random() < itemRatio) ? 'item' : 'obstacle';
                 let w = isMobile ? 32 : 62, h = (type === 'item') ? (isMobile ? 42 : 82) : (isMobile ? 32 : 62);
                 let xPos = Math.random() * (canvas.width - w);
@@ -340,7 +340,7 @@
                     if (o.type === 'item') { 
                         playSound('item'); heartPieces++; 
                         if (gameMode === "catch") score++;
-                        const threshold = (gameMode === "survival") ? 15 : 10;
+                        const threshold = 10; // 구출 모드처럼 10개만 먹어도 목숨 회복
                         if (heartPieces >= threshold) { if (lives < 10) lives++; heartPieces = 0; } 
                     } else if (continueInvincibleTimer <= 0) { 
                         lives--; 
@@ -356,7 +356,7 @@
         function updateUI() {
             const list = document.getElementById('heart-list');
             list.innerHTML = '';
-            const threshold = (gameMode === "survival") ? 15 : 10;
+            const threshold = 10; // 생존 모드도 10으로 통일
             for (let i = 0; i < lives; i++) addHeartToUI(100);
             if (lives < 10 && (heartPieces > 0 || lives === 0)) addHeartToUI((heartPieces / threshold) * 100);
             const statsText = document.getElementById('stats-text');
